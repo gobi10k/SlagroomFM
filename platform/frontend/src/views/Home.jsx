@@ -78,7 +78,7 @@ function AlbumTile({ album, i }) {
   const [imgFailed, setImgFailed] = useState(false);
   const tilt = ((i % 3) - 1) + "deg";
   return (
-    <div style={{ cursor: "pointer", transform: `rotate(${tilt})` }}>
+    <Link to={`/albums/${album.id}`} style={{ textDecoration: "none", color: "inherit", display: "block", transform: `rotate(${tilt})` }}>
       <div className="panel flat" style={{ padding: 6, marginBottom: 8 }}>
         {!imgFailed ? (
           <img
@@ -95,7 +95,7 @@ function AlbumTile({ album, i }) {
         {album.name}
       </div>
       <div className="muted">{album.artist}</div>
-    </div>
+    </Link>
   );
 }
 
@@ -110,7 +110,7 @@ function GigRow({ gig, i }) {
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14 }}>
-          <Link to={`/artists/${gig.artist_slug}`} style={{ fontWeight: 700 }}>{gig.display_name}</Link>
+          <Link to={`/u/${gig.artist_slug}`} style={{ fontWeight: 700 }}>{gig.display_name}</Link>
           {" · "}
           <strong>{gig.title}</strong>
         </div>

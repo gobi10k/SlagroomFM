@@ -1,36 +1,34 @@
 #!/usr/bin/env bash
-# Run on the Mac to build frontends and rsync to the Potato over Tailscale.
-# Usage: ./scripts/deploy.sh [potato-hostname]
+# Build both frontends and deploy static assets to the Pi over Tailscale.
+# Source code deploys via git pull on the Pi.
+# Usage: ./scripts/deploy.sh <pi-ip-or-hostname>
 set -euo pipefail
 
-POTATO="${1:-raspberrypi}"
+PI="${1:?Usage: $0 <pi-ip-or-hostname>}"
 APP=/srv/app
 
 echo "==> Building platform frontend"
-(cd platform/frontend && npm ci && npm run build)
+(cd platform/frontend && npm run build)
 
 echo "==> Building radio UI"
-(cd radio/ui && npm ci && npm run build)
+(cd radio/ui && npm run build)
 
-echo "==> Rsyncing to $POTATO"
+echo "==> Rsyncing built assets to $PI"
 rsync -avz --delete \
+  --exclude='node_modules' --exclude='.venv-*' --exclude='*.env' --exclude='._*' \
   platform/frontend/dist/ \
-  alec@$POTATO:$APP/platform/frontend/dist/
+  alec@"$PI":$APP/platform/frontend/dist/
 
-# radio/ui build goes to radio/scheduler/static — already there from build output
 rsync -avz --delete \
+  --exclude='node_modules' --exclude='.venv-*' --exclude='*.env' --exclude='._*' \
   radio/scheduler/static/ \
-  alec@$POTATO:$APP/radio/scheduler/static/
+  alec@"$PI":$APP/radio/scheduler/static/
 
-rsync -avz \
-  radio/radio.liq \
-  caddy/Caddyfile \
-  radio/scheduler/ \
-  platform/backend/ \
-  systemd/ \
-  alec@$POTATO:$APP/
+echo "==> Pulling latest code on $PI"
+ssh alec@"$PI" "git -C $APP pull"
 
-echo "==> Restarting services on $POTATO"
-ssh alec@$POTATO "sudo systemctl restart radio-scheduler platform-backend liquidsoap caddy"
+echo "==> Restarting services on $PI"
+ssh alec@"$PI" "sudo systemctl restart platform-backend radio-scheduler"
 
-echo "Done!"
+echo ""
+echo "Done! platform-backend and radio-scheduler restarted on $PI."

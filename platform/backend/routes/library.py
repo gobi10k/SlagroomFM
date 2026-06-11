@@ -2,6 +2,7 @@
 Navidrome/Subsonic proxy — translates platform API calls to Subsonic API calls
 using the service account. Users never touch Navidrome directly.
 """
+import asyncio
 import os
 import httpx
 from fastapi import APIRouter, HTTPException, Request, Response
@@ -95,3 +96,43 @@ async def cover_art(item_id: str, size: int = 300):
 async def recent_songs(limit: int = 20):
     data = await _subsonic("getAlbumList2", {"type": "newest", "size": limit})
     return data.get("albumList2", {}).get("album", [])
+
+
+@router.get("/artist/{artist_id}")
+async def get_artist(artist_id: str):
+    data = await _subsonic("getArtist", {"id": artist_id})
+    artist = data.get("artist", {})
+    album_stubs = artist.get("album", [])
+
+    async def fetch_album(stub):
+        album_data = await _subsonic("getAlbum", {"id": stub["id"]})
+        a = album_data.get("album", {})
+        return {
+            "id": a.get("id"),
+            "name": a.get("name"),
+            "coverArt": a.get("coverArt"),
+            "year": a.get("year"),
+            "songs": a.get("song", []),
+        }
+
+    albums = await asyncio.gather(*[fetch_album(s) for s in album_stubs])
+    return {
+        "id": artist.get("id"),
+        "name": artist.get("name"),
+        "albums": list(albums),
+    }
+
+
+@router.get("/album/{album_id}")
+async def get_album(album_id: str):
+    data = await _subsonic("getAlbum", {"id": album_id})
+    a = data.get("album", {})
+    return {
+        "id": a.get("id"),
+        "name": a.get("name"),
+        "artist": a.get("artist"),
+        "artistId": a.get("artistId"),
+        "coverArt": a.get("coverArt"),
+        "year": a.get("year"),
+        "songs": a.get("song", []),
+    }

@@ -5,6 +5,8 @@ import PlayerBar from "./components/PlayerBar";
 import Home from "./views/Home";
 import Browse from "./views/Browse";
 import Artist from "./views/Artist";
+import Album from "./views/Album";
+import UserProfile from "./views/UserProfile";
 import GigBoard from "./views/GigBoard";
 import Upload from "./views/Upload";
 import Profile from "./views/Profile";
@@ -20,7 +22,9 @@ export default function App() {
         <Routes>
           <Route path="/"              element={<Home />} />
           <Route path="/browse"        element={<Browse />} />
-          <Route path="/artists/:slug" element={<Artist />} />
+          <Route path="/artists/:id"   element={<Artist />} />
+          <Route path="/albums/:id"    element={<Album />} />
+          <Route path="/u/:slug"       element={<UserProfile />} />
           <Route path="/gigs"          element={<GigBoard />} />
           <Route path="/upload"        element={<Upload />} />
           <Route path="/profile"       element={<Profile />} />

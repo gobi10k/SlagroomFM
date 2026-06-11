@@ -87,7 +87,7 @@ export function GigRow({ gig, i, onDelete }) {
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14 }}>
-          <Link to={`/artists/${gig.artist_slug}`} style={{ fontWeight: 700 }}>{gig.display_name}</Link>
+          <Link to={`/u/${gig.artist_slug}`} style={{ fontWeight: 700 }}>{gig.display_name}</Link>
           {" · "}
           <strong>{gig.title}</strong>
         </div>
