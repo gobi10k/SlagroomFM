@@ -1,0 +1,13 @@
+[Unit]
+Description=SlagroomFM Liquidsoap
+After=network.target icecast2.service
+
+[Service]
+Type=simple
+User=alec
+ExecStart=/usr/bin/liquidsoap /srv/app/radio/radio.liq
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

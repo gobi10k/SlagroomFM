@@ -1,0 +1,15 @@
+[Unit]
+Description=SlagroomFM Platform Backend
+After=network.target
+
+[Service]
+Type=simple
+User=alec
+WorkingDirectory=/srv/app/platform/backend
+EnvironmentFile=/etc/slagroomfm/platform.env
+ExecStart=/srv/app/.venv-platform/bin/uvicorn main:app --host 127.0.0.1 --port 8001
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

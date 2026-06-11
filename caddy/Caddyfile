@@ -1,0 +1,43 @@
+https://raspberrypi.tailc2dbdb.ts.net {
+    # Platform SPA — static files
+    handle / {
+        root * /srv/app/platform/frontend/dist
+        try_files {path} /index.html
+        file_server
+    }
+
+    # Platform SPA — static assets
+    handle /assets/* {
+        root * /srv/app/platform/frontend/dist
+        file_server
+    }
+
+    # Platform API
+    handle /api/* {
+        reverse_proxy localhost:8001
+    }
+
+    # Radio UI + API
+    handle /radio/* {
+        reverse_proxy localhost:8002
+    }
+
+    # Icecast stream
+    handle /stream {
+        reverse_proxy localhost:8000/teststream
+    }
+
+    # Navidrome
+    handle /nd/* {
+        reverse_proxy localhost:4533
+    }
+
+    # FileBrowser — admin only
+    handle /files/* {
+        basicauth {
+            # Set password: caddy hash-password
+            admin $2a$14$placeholder_replace_with_real_hash
+        }
+        reverse_proxy localhost:8080
+    }
+}
