@@ -1,4 +1,4 @@
-https://raspberrypi.tailc2dbdb.ts.net {
+:8088 {
     # Platform SPA — static files
     handle / {
         root * /srv/app/platform/frontend/dist
@@ -24,7 +24,8 @@ https://raspberrypi.tailc2dbdb.ts.net {
 
     # Icecast stream
     handle /stream {
-        reverse_proxy localhost:8000/teststream
+	rewrite  * /teststream
+        reverse_proxy localhost:8000
     }
 
     # Navidrome

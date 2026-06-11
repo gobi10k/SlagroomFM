@@ -1,5 +1,5 @@
 #!/usr/bin/env liquidsoap
-# SlagroomFM — Liquidsoap 2.x radio script
+# SlagroomFM — Liquidsoap 2.4 radio script
 # Priority chain: live harbor → scheduled requests → fallback rotation
 
 log.level := 3
@@ -15,7 +15,7 @@ live = audio_to_stereo(
   input.harbor(
     "live",
     port = 8005,
-    password = "HARBOR_PASSWORD",
+    password = "hackme",
     max = 60.0
   )
 )
@@ -23,32 +23,39 @@ live = audio_to_stereo(
 # Drop silent live feed so fallback kicks in when DJ goes quiet
 live = blank.strip(
   live,
-  max_blank = 5.0,
+  max_blank = 45.0,
   min_noise = 0.0,
-  threshold = -50.0
+  threshold = -70.0
 )
 
 # ── Scheduled requests ───────────────────────────────────────────────────────
 # Calls the scheduler API: GET http://localhost:8002/radio/api/next
-# Expects a plain-text or JSON {"uri": "/mnt/ssd/..."} response.
+# Expects JSON: {"uri": "/mnt/ssd/..."}. Returns null when nothing is
+# scheduled, which makes this source unavailable so the chain falls
+# through to the rotation playlist.
 scheduler_request = request.dynamic(
   id = "scheduler",
+  retry_delay = 5.0,
   fun() -> begin
-    let json = http.get("http://localhost:8002/radio/api/next")
-    if json.status_code == 200 then
-      let data = json.json()
-      request.create(data["uri"])
+    resp = http.get("http://localhost:8002/radio/api/next")
+    if resp.status_code == 200 then
+      try
+        let json.parse ( {uri} : {uri: string} ) = resp
+        if uri == "" then null else request.create(uri) end
+      catch _ do
+        log.severe(label="scheduler", "Could not parse scheduler response: #{resp}")
+        null
+      end
     else
-      request.create("/dev/null")
+      null
     end
   end
 )
 
-scheduled = mksafe(
-  audio_to_stereo(
-    request.player(scheduler_request)
-  )
-)
+# NOTE: no mksafe here — if the scheduler has nothing, this source must
+# become unavailable so `rotation` can take over. (mksafe would pin the
+# chain to silence instead.)
+scheduled = audio_to_stereo(scheduler_request)
 
 # ── Fallback rotation ────────────────────────────────────────────────────────
 rotation = audio_to_stereo(
@@ -65,11 +72,6 @@ rotation = mksafe(rotation)
 # track_sensitive=false → takeover / fall-back is immediate (not track-boundary).
 radio = fallback(
   track_sensitive = false,
-  transitions = [
-    fun(a, b) -> sequence([fade.out(duration=2.0, a), fade.in(duration=1.0, b)]),
-    fun(a, b) -> sequence([fade.out(duration=2.0, a), fade.in(duration=1.0, b)]),
-    fun(_, b) -> b
-  ],
   [live, scheduled, rotation]
 )
 
@@ -81,6 +83,6 @@ output.icecast(
   mount   = "teststream",
   name    = "SlagroomFM",
   description = "Community Radio",
-  password = "ICECAST_SOURCE_PASSWORD",
+  password = "hackme",
   radio
 )
