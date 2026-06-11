@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
+import { SectionHead } from "../components/paint/PaintBits";
 
 export default function Profile() {
   const { user, setUser, logout } = useAuth();
@@ -29,7 +30,7 @@ export default function Profile() {
     </div>
   );
 
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   const save = async (e) => {
     e.preventDefault();
@@ -51,12 +52,15 @@ export default function Profile() {
 
   return (
     <div className="container page" style={{ maxWidth: 640 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1>Your Profile</h1>
-        <button className="ghost" onClick={handleLogout}>Log out</button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
+        <SectionHead color="var(--p-orange)">profile</SectionHead>
+        <button onClick={handleLogout} style={{ marginBottom: 16 }}>log out</button>
       </div>
+      <p className="muted" style={{ marginBottom: 20 }}>
+        logged in as {user.display_name} ({user.role})
+      </p>
 
-      <form onSubmit={save} className="card" style={{ display: "grid", gap: 14, marginBottom: 32 }}>
+      <form onSubmit={save} className="panel" style={{ display: "grid", gap: 14, marginBottom: 36 }}>
         <div>
           <label style={{ display: "block", marginBottom: 6, fontSize: 13 }}>Display name</label>
           <input value={form.display_name} onChange={set("display_name")} required />
@@ -66,23 +70,33 @@ export default function Profile() {
           <textarea value={form.bio} onChange={set("bio")} rows={4} placeholder="Tell people about your music…" />
         </div>
         <div>
-          <label style={{ display: "block", marginBottom: 6, fontSize: 13 }}>Links (JSON array of {"{"}"label":"…","url":"…"{"}"})</label>
-          <textarea value={form.links_json} onChange={set("links_json")} rows={3} placeholder='[{"label":"Bandcamp","url":"https://…"}]' />
+          <label style={{ display: "block", marginBottom: 6, fontSize: 13 }}>
+            Links (JSON array of {`{"label":"…","url":"…"}`})
+          </label>
+          <textarea
+            value={form.links_json}
+            onChange={set("links_json")}
+            rows={3}
+            placeholder='[{"label":"Bandcamp","url":"https://…"}]'
+          />
         </div>
-        {error && <p style={{ color: "#ef4444" }}>{error}</p>}
-        {saved && <p style={{ color: "#16a34a" }}>Saved!</p>}
-        <button type="submit">Save changes</button>
+        {error && <p style={{ color: "var(--p-red)" }}>{error}</p>}
+        {saved && <p style={{ color: "var(--p-green)" }}>Saved!</p>}
+        <button className="bucket" type="submit">save changes</button>
       </form>
 
-      <h2>Your Uploads</h2>
+      <SectionHead color="var(--p-blue)">your uploads</SectionHead>
       {uploads.length === 0 ? (
         <p className="muted">No uploads yet. <Link to="/upload">Upload a track →</Link></p>
       ) : (
         <div style={{ display: "grid", gap: 8 }}>
           {uploads.map(u => (
-            <div key={u.id} className="card" style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>{u.title}</span>
-              <span className="badge" style={{ background: u.status === "scanned" ? "#16a34a" : "#b45309" }}>
+            <div key={u.id} className="row" style={{ justifyContent: "space-between" }}>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>{u.title}</span>
+              <span
+                className="tag"
+                style={{ background: u.status === "scanned" ? "var(--p-green)" : "var(--p-orange)" }}
+              >
                 {u.status}
               </span>
             </div>

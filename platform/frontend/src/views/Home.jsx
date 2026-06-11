@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePlayer } from "../hooks/usePlayer";
+import { Doodle, LiveBlob, SectionHead, seedFrom } from "../components/paint/PaintBits";
 
 export default function Home() {
   const [nowPlaying, setNowPlaying] = useState(null);
@@ -16,80 +17,106 @@ export default function Home() {
 
   return (
     <div className="container page">
-      {/* Radio banner */}
-      <div className="card" style={{ marginBottom: 32, display: "flex", alignItems: "center", gap: 20 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <h2 style={{ margin: 0 }}>SlagroomFM Radio</h2>
-            {nowPlaying?.icecast?.live && <span className="badge live">LIVE</span>}
+      {/* ON AIR hero — marching ants selection */}
+      <div className="panel ants" style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 48, flexWrap: "wrap" }}>
+        <button
+          className="bucket px"
+          onClick={playRadio}
+          style={{ width: 64, height: 64, fontSize: 26, padding: 0, flexShrink: 0 }}
+        >
+          ▶
+        </button>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+            {nowPlaying?.icecast?.live && <LiveBlob />}
+            <h2 className="px" style={{ fontSize: 26 }}>SlagroomFM radio — ON AIR</h2>
           </div>
           {nowPlaying?.slot && (
-            <p className="muted">{nowPlaying.slot.title}</p>
+            <div style={{ fontSize: 14 }}>{nowPlaying.slot.title}</div>
           )}
           {nowPlaying?.icecast?.listeners > 0 && (
-            <p className="muted">{nowPlaying.icecast.listeners} listening</p>
+            <div className="muted" style={{ marginTop: 3 }}>
+              {nowPlaying.icecast.listeners} listening
+            </div>
           )}
         </div>
-        <button onClick={playRadio}>▶ Tune in</button>
-        <Link to="/radio" className="muted" style={{ fontSize: 13 }}>Schedule ↗</Link>
+        <Link to="/radio" className="px" style={{ fontSize: 14, flexShrink: 0 }}>schedule →</Link>
       </div>
 
       {/* Recent uploads */}
-      <h2>Recent Uploads</h2>
+      <SectionHead color="var(--p-magenta)">recent uploads</SectionHead>
       {recent.length === 0 ? (
-        <p className="muted" style={{ marginBottom: 32 }}>No recent uploads yet.</p>
+        <p className="muted" style={{ marginBottom: 48 }}>No recent uploads yet.</p>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, marginBottom: 32 }}>
-          {recent.map(album => (
-            <AlbumCard key={album.id} album={album} />
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+          gap: 22,
+          marginBottom: 52,
+        }}>
+          {recent.map((album, i) => (
+            <AlbumTile key={album.id} album={album} i={i} />
           ))}
         </div>
       )}
 
       {/* Gig board preview */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h2>Upcoming Gigs</h2>
-        <Link to="/gigs" style={{ fontSize: 13 }}>View all →</Link>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
+        <SectionHead color="var(--p-green)">upcoming gigs</SectionHead>
+        <Link to="/gigs" className="px" style={{ fontSize: 13, marginBottom: 16 }}>view all →</Link>
       </div>
       {gigs.length === 0 ? (
         <p className="muted">No gigs posted yet.</p>
       ) : (
-        <div style={{ display: "grid", gap: 10 }}>
-          {gigs.map(g => (
-            <GigPreview key={g.id} gig={g} />
-          ))}
-        </div>
+        <div>{gigs.map((g, i) => <GigRow key={g.id} gig={g} i={i} />)}</div>
       )}
     </div>
   );
 }
 
-function AlbumCard({ album }) {
+function AlbumTile({ album, i }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const tilt = ((i % 3) - 1) + "deg";
   return (
-    <div className="card" style={{ cursor: "pointer" }}>
-      <img
-        src={`/api/library/cover/${album.id}?size=180`}
-        alt=""
-        style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 6, marginBottom: 8, background: "#222" }}
-        onError={e => { e.target.style.display = "none"; }}
-      />
-      <div style={{ fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{album.name}</div>
+    <div style={{ cursor: "pointer", transform: `rotate(${tilt})` }}>
+      <div className="panel flat" style={{ padding: 6, marginBottom: 8 }}>
+        {!imgFailed ? (
+          <img
+            src={`/api/library/cover/${album.id}?size=180`}
+            alt=""
+            style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block" }}
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <Doodle seed={seedFrom(album.id)} />
+        )}
+      </div>
+      <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {album.name}
+      </div>
       <div className="muted">{album.artist}</div>
     </div>
   );
 }
 
-function GigPreview({ gig }) {
+function GigRow({ gig, i }) {
   return (
-    <div className="card" style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-      <span className="badge" style={{ background: gig.kind === "playing" ? "#16a34a" : "#b45309", flexShrink: 0 }}>
-        {gig.kind === "playing" ? "Playing" : "Looking"}
+    <div className="row" style={{ alignItems: "flex-start", transform: `rotate(${i % 2 ? 0.5 : -0.5}deg)` }}>
+      <span
+        className="tag"
+        style={{ background: gig.kind === "playing" ? "var(--p-green)" : "var(--p-orange)", flexShrink: 0 }}
+      >
+        {gig.kind === "playing" ? "PLAYING" : "LOOKING"}
       </span>
-      <div>
-        <Link to={`/artists/${gig.artist_slug}`} style={{ fontWeight: 600 }}>{gig.display_name}</Link>
-        <span className="muted" style={{ marginLeft: 8 }}>{gig.title}</span>
-        {gig.city && <span className="muted"> · {gig.city}</span>}
-        {gig.date && <span className="muted"> · {gig.date}</span>}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14 }}>
+          <Link to={`/artists/${gig.artist_slug}`} style={{ fontWeight: 700 }}>{gig.display_name}</Link>
+          {" · "}
+          <strong>{gig.title}</strong>
+        </div>
+        <div className="muted" style={{ marginTop: 4, fontSize: 11 }}>
+          {[gig.city, gig.date].filter(Boolean).join(" · ")}
+        </div>
       </div>
     </div>
   );

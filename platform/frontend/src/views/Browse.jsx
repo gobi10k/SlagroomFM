@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePlayer } from "../hooks/usePlayer";
+import { Doodle, SectionHead, seedFrom } from "../components/paint/PaintBits";
 
 export default function Browse() {
   const [q, setQ] = useState("");
   const [results, setResults] = useState(null);
   const [artists, setArtists] = useState([]);
-  const { play, enqueue } = usePlayer();
+  const { enqueue } = usePlayer();
 
   useEffect(() => {
     fetch("/api/library/browse")
@@ -24,15 +25,18 @@ export default function Browse() {
 
   return (
     <div className="container page">
-      <h1>Browse</h1>
-      <form onSubmit={search} style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+      <SectionHead color="var(--p-blue)">browse</SectionHead>
+      <form onSubmit={search} style={{ display: "flex", gap: 8, margin: "8px 0 32px", maxWidth: 560, flexWrap: "wrap" }}>
         <input
-          value={q} onChange={e => setQ(e.target.value)}
-          placeholder="Search tracks, artists…"
-          style={{ maxWidth: 420 }}
+          value={q}
+          onChange={e => setQ(e.target.value)}
+          placeholder="search tracks, artists…"
+          style={{ flex: 1, minWidth: 180 }}
         />
-        <button type="submit">Search</button>
-        {results && <button className="ghost" type="button" onClick={() => setResults(null)}>Clear</button>}
+        <button className="bucket" type="submit">search</button>
+        {results && (
+          <button type="button" onClick={() => { setResults(null); setQ(""); }}>clear</button>
+        )}
       </form>
 
       {results ? (
@@ -49,11 +53,11 @@ function SearchResults({ results, enqueue }) {
     <div>
       {results.artists?.length > 0 && (
         <>
-          <h2>Artists</h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24 }}>
+          <SectionHead color="var(--p-orange)">artists</SectionHead>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 28 }}>
             {results.artists.map(a => (
-              <Link key={a.id} to={`/artists/${a.id}`} className="card" style={{ textDecoration: "none" }}>
-                {a.name}
+              <Link key={a.id} to={`/artists/${a.id}`} style={{ textDecoration: "none" }}>
+                <button>{a.name}</button>
               </Link>
             ))}
           </div>
@@ -61,12 +65,12 @@ function SearchResults({ results, enqueue }) {
       )}
       {results.songs?.length > 0 && (
         <>
-          <h2>Tracks</h2>
+          <SectionHead color="var(--p-orange)">tracks</SectionHead>
           <TrackList tracks={results.songs} enqueue={enqueue} />
         </>
       )}
       {!results.artists?.length && !results.songs?.length && (
-        <p className="muted">No results found.</p>
+        <p className="muted">no results found.</p>
       )}
     </div>
   );
@@ -76,12 +80,22 @@ function ArtistGrid({ artists }) {
   if (!artists.length) return <p className="muted">Loading library…</p>;
   return (
     <>
-      <h2>All Artists</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
-        {artists.map(a => (
-          <Link key={a.id} to={`/artists/${a.id}`} className="card" style={{ textDecoration: "none" }}>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>{a.name}</div>
-            <div className="muted">{a.albumCount} album{a.albumCount !== 1 ? "s" : ""}</div>
+      <SectionHead color="var(--p-orange)">all artists</SectionHead>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
+        {artists.map((a, i) => (
+          <Link key={a.id} to={`/artists/${a.id}`} style={{ textDecoration: "none" }}>
+            <div
+              className="row click"
+              style={{ marginBottom: 0, transform: `rotate(${(i % 3) - 1}deg)` }}
+            >
+              <div style={{ width: 40, flexShrink: 0 }}>
+                <Doodle seed={seedFrom(a.id)} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{a.name}</div>
+                <div className="muted">{a.albumCount} album{a.albumCount !== 1 ? "s" : ""}</div>
+              </div>
+            </div>
           </Link>
         ))}
       </div>
@@ -91,29 +105,42 @@ function ArtistGrid({ artists }) {
 
 export function TrackList({ tracks, enqueue }) {
   return (
-    <div style={{ display: "grid", gap: 6 }}>
+    <div>
       {tracks.map((t, i) => (
         <div
           key={t.id}
-          className="card"
-          style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}
+          className="row click"
           onClick={() => enqueue(tracks.slice(i))}
         >
-          <img
-            src={`/api/library/cover/${t.coverArt || t.albumId}?size=48`}
-            alt=""
-            style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 4, flexShrink: 0, background: "#222" }}
-            onError={e => { e.target.style.display = "none"; }}
-          />
+          <div style={{ width: 46, flexShrink: 0 }}>
+            <TrackThumb track={t} />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</div>
+            <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {t.title}
+            </div>
             <div className="muted">{t.artist}</div>
           </div>
-          <div className="muted" style={{ flexShrink: 0, fontSize: 12 }}>
-            {t.duration ? `${Math.floor(t.duration / 60)}:${String(t.duration % 60).padStart(2, "0")}` : ""}
-          </div>
+          {t.duration != null && (
+            <span className="px" style={{ flexShrink: 0, fontSize: 13 }}>
+              {Math.floor(t.duration / 60)}:{String(t.duration % 60).padStart(2, "0")}
+            </span>
+          )}
         </div>
       ))}
     </div>
+  );
+}
+
+function TrackThumb({ track }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <Doodle seed={seedFrom(track.id)} />;
+  return (
+    <img
+      src={`/api/library/cover/${track.coverArt || track.albumId}?size=48`}
+      alt=""
+      style={{ width: 46, height: 46, objectFit: "cover", display: "block", border: "2px solid #000" }}
+      onError={() => setFailed(true)}
+    />
   );
 }

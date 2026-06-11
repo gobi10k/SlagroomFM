@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { TrackList } from "./Browse";
 import { usePlayer } from "../hooks/usePlayer";
+import { Doodle, Squiggle, SectionHead, seedFrom } from "../components/paint/PaintBits";
+import { GigRow } from "./GigBoard";
 
 export default function Artist() {
   const { slug } = useParams();
@@ -24,60 +26,70 @@ export default function Artist() {
 
   const tracksWithNd = uploads
     .filter(u => u.navidrome_song_id)
-    .map(u => ({ id: u.navidrome_song_id, title: u.title, artist: profile.display_name, navidrome_song_id: u.navidrome_song_id }));
+    .map(u => ({
+      id: u.navidrome_song_id,
+      title: u.title,
+      artist: profile.display_name,
+      navidrome_song_id: u.navidrome_song_id,
+    }));
 
   return (
     <div className="container page">
-      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", marginBottom: 32 }}>
-        {profile.avatar_path ? (
-          <img src={profile.avatar_path} alt="" style={{ width: 100, height: 100, borderRadius: "50%", objectFit: "cover" }} />
-        ) : (
-          <div style={{ width: 100, height: 100, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>
-            {profile.display_name[0]}
-          </div>
-        )}
-        <div>
-          <h1>{profile.display_name}</h1>
-          {profile.bio && <p style={{ marginTop: 8, color: "var(--text-muted)", maxWidth: 600 }}>{profile.bio}</p>}
+      {/* Profile header */}
+      <div style={{ display: "flex", gap: 26, alignItems: "flex-start", marginBottom: 40, flexWrap: "wrap" }}>
+        <div
+          className="panel flat"
+          style={{ padding: 6, width: 130, flexShrink: 0, transform: "rotate(-2deg)" }}
+        >
+          {profile.avatar_path ? (
+            <img
+              src={profile.avatar_path}
+              alt=""
+              style={{ width: "100%", aspectRatio: "1", objectFit: "cover", display: "block" }}
+            />
+          ) : (
+            <Doodle seed={seedFrom(profile.artist_slug || profile.id)} />
+          )}
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <h1 className="px" style={{ fontSize: 40 }}>{profile.display_name}</h1>
+          <Squiggle color="var(--p-magenta)" w={220} />
+          {profile.bio && (
+            <p className="muted" style={{ marginTop: 12, maxWidth: 580, fontSize: 13, lineHeight: 1.6 }}>
+              {profile.bio}
+            </p>
+          )}
           {links.length > 0 && (
-            <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-              {links.map((l, i) => <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{ fontSize: 13 }}>{l.label}</a>)}
+            <div style={{ display: "flex", gap: 16, marginTop: 12, flexWrap: "wrap" }}>
+              {links.map((l, i) => (
+                <a key={i} href={l.url} target="_blank" rel="noreferrer" style={{ fontSize: 13 }}>{l.label}</a>
+              ))}
             </div>
           )}
         </div>
       </div>
 
+      {/* Tracks */}
       {tracksWithNd.length > 0 && (
         <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h2>Tracks</h2>
-            <button className="ghost" onClick={() => enqueue(tracksWithNd)}>Play all</button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
+            <SectionHead color="var(--p-cyan)">tracks</SectionHead>
+            <button onClick={() => enqueue(tracksWithNd)} style={{ marginBottom: 16 }}>▶ play all</button>
           </div>
-          <TrackList tracks={tracksWithNd} enqueue={enqueue} />
+          <div style={{ marginBottom: 44 }}>
+            <TrackList tracks={tracksWithNd} enqueue={enqueue} />
+          </div>
         </>
       )}
 
+      {/* Gigs */}
       {gigs.length > 0 && (
-        <div style={{ marginTop: 32 }}>
-          <h2>Gigs</h2>
-          <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
-            {gigs.map(g => (
-              <div key={g.id} className="card">
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <span className="badge" style={{ background: g.kind === "playing" ? "#16a34a" : "#b45309" }}>
-                    {g.kind === "playing" ? "Playing" : "Looking"}
-                  </span>
-                  <strong>{g.title}</strong>
-                </div>
-                {g.body && <p style={{ marginTop: 8, color: "var(--text-muted)", fontSize: 14 }}>{g.body}</p>}
-                <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-                  {[g.venue, g.city, g.date].filter(Boolean).join(" · ")}
-                  {g.link && <> · <a href={g.link} target="_blank" rel="noreferrer">Link</a></>}
-                </div>
-              </div>
-            ))}
+        <>
+          <SectionHead color="var(--p-orange)">gig posts</SectionHead>
+          <div>
+            {gigs.map((g, i) => <GigRow key={g.id} gig={g} i={i} />)}
           </div>
-        </div>
+        </>
       )}
     </div>
   );

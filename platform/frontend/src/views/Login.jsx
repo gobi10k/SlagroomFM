@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate, Link } from "react-router-dom";
+import { SectionHead } from "../components/paint/PaintBits";
 
 export default function Login() {
   const { login } = useAuth();
@@ -23,14 +24,14 @@ export default function Login() {
 
   return (
     <div className="container page" style={{ maxWidth: 400 }}>
-      <h1>Log in</h1>
-      <form onSubmit={submit} className="card" style={{ display: "grid", gap: 14, marginTop: 20 }}>
-        <input type="email" value={form.email} onChange={set("email")} placeholder="Email" required />
-        <input type="password" value={form.password} onChange={set("password")} placeholder="Password" required />
-        {error && <p style={{ color: "#ef4444" }}>{error}</p>}
-        <button type="submit">Log in</button>
+      <SectionHead color="var(--p-blue)">log in</SectionHead>
+      <form onSubmit={submit} className="panel" style={{ display: "grid", gap: 14, marginTop: 20 }}>
+        <input type="email" value={form.email} onChange={set("email")} placeholder="email" required />
+        <input type="password" value={form.password} onChange={set("password")} placeholder="password" required />
+        {error && <p style={{ color: "var(--p-red)" }}>{error}</p>}
+        <button className="bucket" type="submit">log in</button>
         <p className="muted" style={{ textAlign: "center" }}>
-          No account? <Link to="/register">Register</Link>
+          no account? <Link to="/register">register</Link>
         </p>
       </form>
     </div>

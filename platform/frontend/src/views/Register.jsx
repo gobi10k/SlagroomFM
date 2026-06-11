@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { SectionHead } from "../components/paint/PaintBits";
 
 export default function Register() {
   const { setUser } = useAuth();
@@ -26,33 +27,34 @@ export default function Register() {
 
   return (
     <div className="container page" style={{ maxWidth: 440 }}>
-      <h1>Create account</h1>
-      <form onSubmit={submit} className="card" style={{ display: "grid", gap: 14, marginTop: 20 }}>
-        <input type="email" value={form.email} onChange={set("email")} placeholder="Email *" required />
-        <input type="password" value={form.password} onChange={set("password")} placeholder="Password (min 8 chars) *" required />
-        <input value={form.display_name} onChange={set("display_name")} placeholder="Display name *" required />
+      <SectionHead color="var(--p-magenta)">create account</SectionHead>
+      <form onSubmit={submit} className="panel" style={{ display: "grid", gap: 14, marginTop: 20 }}>
+        <input type="email" value={form.email} onChange={set("email")} placeholder="email *" required />
+        <input type="password" value={form.password} onChange={set("password")} placeholder="password (min 8 chars) *" required />
+        <input value={form.display_name} onChange={set("display_name")} placeholder="display name *" required />
         <div>
-          <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Account type</label>
+          <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>account type</label>
           <select value={form.role} onChange={set("role")}>
-            <option value="listener">Listener</option>
-            <option value="artist">Artist (can upload tracks)</option>
+            <option value="listener">listener</option>
+            <option value="artist">artist (can upload tracks)</option>
           </select>
         </div>
         {form.role === "artist" && (
           <div>
-            <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Artist URL slug</label>
+            <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>artist URL slug</label>
             <input
-              value={form.artist_slug} onChange={set("artist_slug")}
+              value={form.artist_slug}
+              onChange={set("artist_slug")}
               placeholder="e.g. my-band-name"
               pattern="[a-z0-9-]{2,40}"
               title="Lowercase letters, numbers, hyphens (2–40 chars)"
             />
           </div>
         )}
-        {error && <p style={{ color: "#ef4444" }}>{error}</p>}
-        <button type="submit">Register</button>
+        {error && <p style={{ color: "var(--p-red)" }}>{error}</p>}
+        <button className="bucket" type="submit">register</button>
         <p className="muted" style={{ textAlign: "center" }}>
-          Already have an account? <Link to="/login">Log in</Link>
+          already have an account? <Link to="/login">log in</Link>
         </p>
       </form>
     </div>
