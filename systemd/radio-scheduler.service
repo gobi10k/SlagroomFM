@@ -5,9 +5,9 @@ After=network.target
 [Service]
 Type=simple
 User=alec
-WorkingDirectory=/srv/app/radio/scheduler
+WorkingDirectory=/srv/app/radio
 EnvironmentFile=/etc/slagroomfm/radio.env
-ExecStart=/srv/app/.venv-radio/bin/uvicorn main:app --host 127.0.0.1 --port 8002
+ExecStart=/srv/app/.venv-radio/bin/uvicorn scheduler.main:app --host 127.0.0.1 --port 8002
 Restart=on-failure
 RestartSec=5
 
